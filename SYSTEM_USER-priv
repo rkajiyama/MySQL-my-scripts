@@ -1,0 +1,35 @@
+## Log in with root
+# Create database for test
+CREATE DATABASE world;
+# Create scott as regular user
+CREATE USER 'scott'@'localhost' IDENTIFIED BY 'tiger';
+CREATE USER 'scott'@'%' IDENTIFIED BY 'tiger';
+
+GRANT ALL ON *.* TO 'scott'@'localhost' WITH GRANT OPTION;
+GRANT ALL ON *.* TO 'scott'@'%' WITH GRANT OPTION;
+
+# Make scott as a regular user by revoking SYSTEM_USER priv
+REVOKE SYSTEM_USER ON *.* FROM 'scott'@'localhost';
+REVOKE SYSTEM_USER ON *.* FROM 'scott'@'%';
+
+# Create u1 as system user
+CREATE USER u1 IDENTIFIED BY 'password';
+GRANT ALL ON *.* TO u1 WITH GRANT OPTION;
+
+
+## Log in with scott, regular user
+# Trying to revoke SYSTEM_USER from system user
+REVOKE SYSTEM_USER ON *.* FROM u1;
+-> ERROR: 1227 (42000): Access denied; you need (at least one of) the SYSTEM_USER privilege(s) for this operation
+
+## By scott, regular user
+CREATE USER u2 IDENTIFIED BY 'password';
+-> OK
+GRANT SELECT, INSERT, UPDATE, DELETE ON *.* TO u2;
+-> OK
+REVOKE INSERT, UPDATE, DELETE ON mysql.* FROM u2;
+-> ERROR: 1141 (42000): There is no such grant defined for user 'u2' on host '%'
+ 	
+REVOKE INSERT, UPDATE, DELETE ON world.* FROM u2;
+->
+ERROR: 1141 (42000): There is no such grant defined for user 'u2' on host '%'
